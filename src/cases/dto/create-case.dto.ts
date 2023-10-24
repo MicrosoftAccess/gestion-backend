@@ -1,13 +1,15 @@
+import { NRC, User } from "@prisma/client";
 import { IsNotEmpty } from "class-validator";
 
 export class CreateCaseDto {
     @IsNotEmpty()
     title: string;
     @IsNotEmpty()
-    nrc: number;
+    nrc: number
     @IsNotEmpty()
-    campus: string;
+    campus: number;
     @IsNotEmpty()
     description: string;
-    userId: number;
+    studentId: number;
+    professorId: number;
 }

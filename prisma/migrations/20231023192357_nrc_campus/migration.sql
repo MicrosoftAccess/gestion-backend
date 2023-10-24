@@ -1,0 +1,5 @@
+-- AlterTable
+ALTER TABLE "NRC" ADD COLUMN     "campusId" INTEGER;
+
+-- AddForeignKey
+ALTER TABLE "NRC" ADD CONSTRAINT "NRC_campusId_fkey" FOREIGN KEY ("campusId") REFERENCES "Campus"("id") ON DELETE SET NULL ON UPDATE CASCADE;

@@ -13,7 +13,7 @@ import {
 import { CasesService } from './cases.service';
 import { CreateCaseDto } from './dto/create-case.dto';
 import { UpdateCaseDto } from './dto/update-case.dto';
-import { Case } from './entities/case.entity';
+import { Case, ICaseForm } from './entities/case.entity';
 import { AuthService } from 'src/auth/auth.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
@@ -30,11 +30,12 @@ export class CasesController {
       storage: diskStorage({
         destination: './uploads',
         filename: function (req, file, cb) {
-          cb(null, file.originalname + '_' + Date.now() + '.pdf');
+          cb(null, file.originalname.slice(0, -4) + '_' + Date.now() + '.pdf');
         },
       }),
     }),
   )
+  
   @Post()
   create(
     @Body() createCaseDto: any,
@@ -42,7 +43,7 @@ export class CasesController {
     @UploadedFile() file,
   ) {
     this._authService.token$.next(headers.authorization);
-    return this.casesService.create(JSON.parse(createCaseDto.form) as Case, file.originalname + '_' + Date.now() + '.pdf');
+    return this.casesService.create(JSON.parse(createCaseDto.form) as ICaseForm, file.filename);
   }
 
   @Get()
@@ -51,6 +52,7 @@ export class CasesController {
     this._authService.token$.next(headers.authorization);
     return this.casesService.findAll();
   }
+  
 
   @Get(':id')
   findOne(@Param('id') id: string) {
@@ -58,9 +60,15 @@ export class CasesController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateCaseDto: UpdateCaseDto) {
-    // return this.casesService.update(+id, updateCaseDto);
+  update(@Param('id') id: string, @Body() updateCaseDto: UpdateCaseDto,@Headers() headers: any,) {
+    this._authService.token$.next(headers.authorization);
+    return this.casesService.update(+id, updateCaseDto);
   }
+  // @Patch('vrCase/:id')
+  // updateAsVr(@Param('id') id: string, @Body() updateCaseDto: UpdateCaseDto,@Headers() headers: any,) {
+  //   this._authService.token$.next(headers.authorization);
+  //   return this.casesService.updateAsVr(+id, updateCaseDto);
+  // }
 
   @Delete(':id')
   remove(@Param('id') id: string) {

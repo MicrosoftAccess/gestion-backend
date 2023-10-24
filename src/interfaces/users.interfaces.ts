@@ -1,4 +1,4 @@
-import { User as UserModel, Role } from '@prisma/client';
+import { User as UserModel, Role, Case } from '@prisma/client';
 
 export interface User extends UserModel {
   id: number;
@@ -8,4 +8,18 @@ export interface User extends UserModel {
   email: string;
   rut: string;
   role: Role;
+  nrc: number[],
+  CaseStudent: Case[],
+  CaseProfessor: Case[]
+
+}
+
+
+export interface IToken {
+  sub: number,
+  email: string,
+  role: Role,
+  nrc: number[],
+  name:string,
+  surname: string
 }
