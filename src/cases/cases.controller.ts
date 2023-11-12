@@ -35,7 +35,7 @@ export class CasesController {
       }),
     }),
   )
-  
+
   @Post()
   create(
     @Body() createCaseDto: any,
@@ -48,7 +48,6 @@ export class CasesController {
 
   @Get()
   findAll(@Headers() headers: any) {
-    console.log(headers.authorization);
     this._authService.token$.next(headers.authorization);
     return this.casesService.findAll();
   }
@@ -74,4 +73,13 @@ export class CasesController {
   remove(@Param('id') id: string) {
     return this.casesService.remove(+id);
   }
+
+  
+  @Get('data/excel')
+  generateReport() {
+    return this.casesService.generateReport();
+  }
+  
+
+  
 }
