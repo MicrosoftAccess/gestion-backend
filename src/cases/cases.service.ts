@@ -83,7 +83,6 @@ export class CasesService {
       where: { id: token.sub },
     });
 
-    console.log(token);
     let condition = {};
     if (currentUser.role === 'PROFESSOR') {
       condition = {
@@ -219,7 +218,6 @@ export class CasesService {
       const templateStudent = Handlebars.compile(sourceStudent);
       const htmlToSendStudent = templateStudent({username: `${userName.student.name} ${userName.student.surname}`.toUpperCase(),caseTitle: userName.title, response:updateCaseDto.vrResponse,status:this.statusTranslation(updateCaseDto.status)})
       await this.sendEmailVRUpdate(id, htmlToSendStudent,userName.student.email,updateCaseDto.status);
-      console.log('sent')
     }
 
     return await this._prisma.case.update({

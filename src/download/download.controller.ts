@@ -25,14 +25,12 @@ export class DownloadController {
   @Get(':filename')
   getFile(@Param('filename') filename, @Res({ passthrough: true }) res: Response): StreamableFile {
     const file = createReadStream(join(process.cwd(), `uploads/${filename}`));
-    console.log("🚀 ~ file: download.controller.ts:29 ~ DownloadController ~ getFile ~ file:", file)
     return new StreamableFile(file);
   }
 
   @Get('streamable')
   streamable(@Res({ passthrough: true }) response: Response) {
     const file = createReadStream(join(process.cwd(), 'uploads/file_1697494827557.pdf'));
-    console.log(file)
     return new StreamableFile(file);
   }
   @Get('buffer')

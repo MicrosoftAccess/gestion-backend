@@ -41,7 +41,6 @@ export class ReportService {
   for (const i in newData){
     const newCount = {};
     for (const j of newData[i]){
-      console.log(j);
       newCount['NOMBRE'] = `${j.name ?? 'Reporte General'} ${j.surname ??  ''} `;
       switch (j.status) {
         case 'APPROVED':
@@ -69,7 +68,6 @@ export class ReportService {
   }
    
 
-    console.log(reportData)
     const worksheet = xlsx.utils.json_to_sheet(reportData);
     const workbook = {
       Sheets: { data: worksheet },
