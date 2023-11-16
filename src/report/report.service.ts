@@ -23,8 +23,10 @@ export class ReportService {
     
 
     let val = querys[queryInfo.query](queryInfo)
-
+    console.log(queryInfo)
     let data:any = await this._prisma.$queryRawUnsafe(val)
+
+    // if (!data) return false
 
    const newData = data.reduce((rv, x) => {
     (rv[x[`${queryInfo.reduce}`]] = rv[x[`${queryInfo.reduce}`]] || []).push(x);

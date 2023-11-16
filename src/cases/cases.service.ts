@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ICaseForm, newCase } from './entities/case.entity';
 import { AuthService } from 'src/auth/auth.service';
@@ -22,17 +22,33 @@ export class CasesService {
     createCaseDto: ICaseForm,
     filename: string,
   ): Promise<any | null> {
+    
+    if (createCaseDto.title=='' || createCaseDto.description=='' || createCaseDto.campus==null || createCaseDto.nrc==null){
+      throw new UnauthorizedException()
+    }
     const test = this._authService.getCurrentToken();
     const token:any = this._jwtService.decode(test.split(' ')[1]);
     const source = fs.readFileSync('./src/templates/email_template.html', 'utf-8');
     const template = Handlebars.compile(source);
     const htmlToSend = template({username: `${token.name} ${token.surname}`.toUpperCase()})
+    const emails = []
+    const vrEmails:any = await this._prisma.$queryRaw`SELECT "email","name","surname" FROM "User" WHERE "role"='VR'`
+    console.log(vrEmails)
+    let mails = vrEmails.forEach((item)=>emails.push(Object.values(item)[0]))
     this.sendEmail(
       token.email,
       `UNAB - ${token.name} ${token.surname}`.toUpperCase() + ' tu caso ha sido creado',
       htmlToSend,
       
     );
+    const sourceVR = fs.readFileSync('./src/templates/email_template_approved.html', 'utf-8');
+    const templateVR = Handlebars.compile(sourceVR);
+    const htmlToSendVR = templateVR({username: "Usuario de Vicerrectoría",caseTitle: createCaseDto.title,studentName:`${token.name} ${token.surname}`.toUpperCase(),nrcName:createCaseDto.nrc.name,description:createCaseDto.description,status:'Creado'})
+    this.sendEmail(
+      emails,
+      `UNAB - Hay un nuevo caso del alumno `+` ${vrEmails.name} ${vrEmails.surname}`.toUpperCase(),
+      htmlToSendVR
+    )
     return await this._prisma.case.create({
       data: {
         title: createCaseDto.title,
@@ -149,6 +165,8 @@ export class CasesService {
     const token: IToken = this._jwtService.decode(test.split(' ')[1]) as IToken;
     // const source = fs.readFileSync('../../templates/email_template.html', 'utf-8');
     
+    
+    console.log(updateCaseDto)
     const userName:any = await this._prisma.case.findFirst(
       {
         where:{
@@ -182,6 +200,9 @@ export class CasesService {
     let data = {};
 
     if (token.role == 'PROFESSOR') {
+      if(updateCaseDto.response=='' || updateCaseDto.dateTest==null){
+        throw new UnauthorizedException()
+      }
       data = {
         response: updateCaseDto.response,
         status: 'SOLVED',
@@ -198,6 +219,9 @@ export class CasesService {
       const htmlToSend = template({username: `${userName.student.name} ${userName.student.surname}`.toUpperCase(),caseTitle:userName.title,response:updateCaseDto.response})
       await this.sendEmailProfessorUpdate(id, htmlToSend);
     } else {
+      if(updateCaseDto.status==null || updateCaseDto.vrResponse==''){
+        throw new UnauthorizedException()
+      }
       data = {
         vrResponse: updateCaseDto.vrResponse,
         status: updateCaseDto.status,
@@ -211,7 +235,7 @@ export class CasesService {
       if(updateCaseDto.status=='APPROVED'){
         const source = fs.readFileSync('./src/templates/email_template_approved.html', 'utf-8');
         const template = Handlebars.compile(source);
-        const htmlToSend = template({username: `${userName.professor.name} ${userName.professor.surname}`.toUpperCase(),caseTitle: userName.title,studentName:`${userName.student.name} ${userName.student.surname}`.toUpperCase(),nrcName:userName.nrc.name,description:userName.description})
+        const htmlToSend = template({username: `${userName.professor.name} ${userName.professor.surname}`.toUpperCase(),caseTitle: userName.title,studentName:`${userName.student.name} ${userName.student.surname}`.toUpperCase(),nrcName:userName.nrc.name,description:userName.description,status:'Aprobado'})
         await this.sendEmailVRUpdate(id, htmlToSend,userName.professor.email,updateCaseDto.status);
       }
       const sourceStudent = fs.readFileSync('./src/templates/email_template_vr.html', 'utf-8');
@@ -219,7 +243,7 @@ export class CasesService {
       const htmlToSendStudent = templateStudent({username: `${userName.student.name} ${userName.student.surname}`.toUpperCase(),caseTitle: userName.title, response:updateCaseDto.vrResponse,status:this.statusTranslation(updateCaseDto.status)})
       await this.sendEmailVRUpdate(id, htmlToSendStudent,userName.student.email,updateCaseDto.status);
     }
-
+    
     return await this._prisma.case.update({
       data,
       where: {
@@ -272,7 +296,7 @@ export class CasesService {
     );
   }
 
-  async sendEmail(to: string, subject: string, html: any) {
+  async sendEmail(to: any, subject: string, html: any) {
     return await this._mailerService.sendMail({
       to: to,
       from: 'gestioncasosmailer@gmail.com',
