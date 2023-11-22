@@ -22,9 +22,8 @@ export class CasesService {
     createCaseDto: ICaseForm,
     filename: string,
   ): Promise<any | null> {
-    
     if (createCaseDto.title=='' || createCaseDto.description=='' || createCaseDto.campus==null || createCaseDto.nrc==null){
-      throw new UnauthorizedException()
+      throw new Error()
     }
     const test = this._authService.getCurrentToken();
     const token:any = this._jwtService.decode(test.split(' ')[1]);
@@ -33,7 +32,7 @@ export class CasesService {
     const htmlToSend = template({username: `${token.name} ${token.surname}`.toUpperCase()})
     const emails = []
     const vrEmails:any = await this._prisma.$queryRaw`SELECT "email","name","surname" FROM "User" WHERE "role"='VR'`
-    console.log(vrEmails)
+    
     let mails = vrEmails.forEach((item)=>emails.push(Object.values(item)[0]))
     this.sendEmail(
       token.email,
@@ -166,7 +165,7 @@ export class CasesService {
     // const source = fs.readFileSync('../../templates/email_template.html', 'utf-8');
     
     
-    console.log(updateCaseDto)
+    
     const userName:any = await this._prisma.case.findFirst(
       {
         where:{
@@ -201,7 +200,7 @@ export class CasesService {
 
     if (token.role == 'PROFESSOR') {
       if(updateCaseDto.response=='' || updateCaseDto.dateTest==null){
-        throw new UnauthorizedException()
+        throw new Error()
       }
       data = {
         response: updateCaseDto.response,
@@ -220,7 +219,7 @@ export class CasesService {
       await this.sendEmailProfessorUpdate(id, htmlToSend);
     } else {
       if(updateCaseDto.status==null || updateCaseDto.vrResponse==''){
-        throw new UnauthorizedException()
+        throw new Error()
       }
       data = {
         vrResponse: updateCaseDto.vrResponse,
